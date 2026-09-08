@@ -12,21 +12,3 @@
 # Icon contact sheets are a working artefact of scripts/generate_icon.py.
 # The generator is the source of truth; the previews are regenerable.
 /.icon-preview/
-
-# Internal working documents. The GitHub repo is PUBLIC, and the deploy
-# allowlist only keeps these off the published site - it does not keep them
-# off github.com. They describe the design, the process and this project's
-# candid post-mortem, and no public reader needs any of it.
-#
-# They stay on disk, untracked. That means git is NOT backing them up.
-SPEC.md
-CLAUDE.md
-FRAMEWORK-SUGGESTIONS-*.md
-
-# Local editor/agent configuration. Useful here, meaningless to anyone else.
-.claude/
-
-# Wrapper for the local-only documents repo. Run ./docs-git for what it does.
-# Its own history lives in <local path> which has
-# no remote.
-docs-git
