@@ -1,48 +1,84 @@
-// Fills the one figure on the About page from live data, so the stated
-// limitation cannot drift away from what the feed actually contains.
-import { parseMembers } from './members.js?v=1.2.3';
+// Fills the figures and dates on the About page from live data, so a stated
+// limitation cannot drift away from what the app actually holds.
+//
+// Deliberate distinction: the feed carries no "last updated" field, so the only
+// honest date for the schedule is when THIS page fetched it. Presenting a fetch
+// time as the theatre's update time would be a confident falsehood - the exact
+// thing the 「他」 section of this page exists to warn about.
+import { parseMembers } from './members.js?v=1.3.0';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
+const TALENTS = 'data/talents.json?v=1.3.0';
 const PLACEHOLDER = ['他', 'ほか'];
 
 function hasHidden(member) {
   return (member || '').split(/[／/]/)
     .some((t) => PLACEHOLDER.includes(t.split(/[\r\n]/)[0].trim()));
 }
+const set = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+const pad = (n) => String(n).padStart(2, '0');
+const jpDate = (d) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+const jpDateTime = (d) => `${jpDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-(async () => {
-  const node = document.getElementById('hokaStat');
-  try {
-    const feed = await (await fetch(FEED)).json();
-    const now = new Date();
-    const cur = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const future = feed.filter((r) => (r.date || '').slice(0, 7) >= cur);
-    if (!future.length) return;
-    const n = future.filter((r) => hasHidden(r.member)).length;
-    node.textContent = `${future.length}公演中 ${n}公演（約${Math.round(n / future.length * 100)}%）`;
+function jpFromISO(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  return m ? `${Number(m[1])}年${Number(m[2])}月${Number(m[3])}日` : '不明';
+}
 
-    // Per-month, because the blended figure hides the thing that actually
-    // matters: the current month is nearly complete and the far months are not.
-    const by = new Map();
-    for (const r of future) {
-      const m = (r.date || '').slice(0, 7);
-      if (!by.has(m)) by.set(m, { n: 0, t: 0 });
-      const b = by.get(m); b.n++; if (hasHidden(r.member)) b.t++;
+async function schedule() {
+  const feed = await (await fetch(FEED)).json();
+  const fetchedAt = new Date();
+  const now = new Date();
+  const cur = `${now.getFullYear()}/${pad(now.getMonth() + 1)}`;
+  const future = feed.filter((r) => (r.date || '').slice(0, 7) >= cur);
+  if (!future.length) return;
+
+  const n = future.filter((r) => hasHidden(r.member)).length;
+  set('asOf', `${jpDateTime(fetchedAt)} 時点`);
+  set('hokaStat', `${future.length}公演中 ${n}公演（約${Math.round(n / future.length * 100)}%）`);
+  set('fetchedAt', jpDateTime(fetchedAt));
+  set('fetchedAt2', jpDateTime(fetchedAt));
+
+  const dates = future.map((r) => r.date).sort();
+  set('dataRange', `${dates[0].replace(/\//g, '/')} 〜 ${dates[dates.length - 1]}`);
+
+  const by = new Map();
+  for (const r of future) {
+    const m = (r.date || '').slice(0, 7);
+    if (!by.has(m)) by.set(m, { n: 0, t: 0 });
+    const b = by.get(m); b.n++; if (hasHidden(r.member)) b.t++;
+  }
+  const ul = document.getElementById('hokaByMonth');
+  if (ul) {
+    ul.textContent = '';
+    for (const m of [...by.keys()].sort()) {
+      const b = by.get(m); const p = m.split('/');
+      const li = document.createElement('li');
+      li.textContent = `${p[0]}年${Number(p[1])}月：${b.n}公演中 ${b.t}公演`
+        + `（${Math.round(b.t / b.n * 100)}%）が「他」表記`;
+      ul.append(li);
     }
-    const ul = document.getElementById('hokaByMonth');
-    if (ul) {
-      ul.textContent = '';
-      for (const m of [...by.keys()].sort()) {
-        const b = by.get(m);
-        const p = m.split('/');
-        const li = document.createElement('li');
-        li.textContent = `${p[0]}年${Number(p[1])}月：${b.n}公演中 ${b.t}公演`
-          + `（${Math.round(b.t / b.n * 100)}%）が「他」表記`;
-        ul.append(li);
-      }
-    }
-    // parseMembers is imported so this page and the app agree on what a
-    // performer token is; referencing it here keeps that link explicit.
-    void parseMembers;
-  } catch { /* leave the cautious wording in place */ }
-})();
+  }
+  void parseMembers; // same module the app parses with; kept explicit
+}
+
+async function talents() {
+  const t = await (await fetch(TALENTS)).json();
+  const when = jpFromISO(t.generated);
+  set('talentsGenerated', when);
+  set('talentsGenerated2', when);
+  const linked = Object.keys(t.ids || {}).length;
+  const missing = (t.unresolved || []).length;
+  set('talentsCoverage', `${linked}組（未収録 ${missing}組）`);
+}
+
+// Independent: a failure in one must not blank the other.
+schedule().catch(() => {
+  set('asOf', '現在');
+  set('fetchedAt', '取得できませんでした');
+  set('fetchedAt2', '取得できませんでした');
+});
+talents().catch(() => {
+  set('talentsGenerated', '不明');
+  set('talentsGenerated2', '不明');
+});

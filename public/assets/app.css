@@ -144,3 +144,11 @@ main.doc .ver{margin-top:28px;color:var(--sub);font-size:12px}
 .caveat-row .ct{flex:1 1 auto;color:var(--ink);overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
 .caveat-row .cl{flex:0 0 auto;color:var(--accent);text-decoration:none}
+
+/* Data-freshness notes on the About page. The schedule has no publisher-side
+   timestamp, so these say when WE fetched, never when the theatre updated. */
+main.doc .asof-note{font-size:12px;color:var(--sub);background:var(--panel);
+  border:1px solid var(--line);border-radius:8px;padding:8px 11px;line-height:1.8}
+main.doc dl.asof{margin:0 0 12px;font-size:13px}
+main.doc dl.asof dt{font-weight:600;margin-top:10px;color:var(--ink)}
+main.doc dl.asof dd{margin:2px 0 0;color:var(--sub);line-height:1.8}

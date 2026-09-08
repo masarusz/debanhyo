@@ -90,6 +90,19 @@ product.
 
 ## Change Log
 
+### v1.3.0 — 2026-09-08
+- The About page now states **when the data it reports was obtained**. The
+  schedule feed carries no publisher-side timestamp, so the page says when *this
+  page fetched it* and says so explicitly, rather than implying the theatre
+  updated then.
+- The talent id map does have a real update date, and the page now shows it,
+  together with coverage (205 linked, 8 falling back to search) — so it is
+  visible when the map is behind the schedule.
+- Added an 更新状況 summary listing all three: schedule fetch time and covered
+  date range, talent map generation date, and app version.
+- The two fetches are independent: verified with the map absent, the schedule
+  figures and dates still render and the talent lines degrade to 不明 / —.
+
 ### v1.2.3 — 2026-09-08
 - **Fixed the real cause of the layout breaking when the search field was
   tapped on iPhone.** The input was 15px, and iOS Safari zooms the entire page

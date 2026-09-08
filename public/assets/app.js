@@ -5,10 +5,10 @@
 // control, and show titles and performer names are free text in it.
 import {
   parseMembers, formatYen, displayName, safeTicketUrl, profileUrl,
-} from './members.js?v=1.2.3';
+} from './members.js?v=1.3.0';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.2.3';
+const TALENTS = 'data/talents.json?v=1.3.0';
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const ALL = 'ALL';
 const PLACEHOLDER = ['他', 'ほか'];
