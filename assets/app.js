@@ -5,12 +5,15 @@
 // control, and show titles and performer names are free text in it.
 import {
   parseMembers, formatYen, displayName, safeTicketUrl, profileUrl,
-} from './members.js?v=1.3.0';
+} from './members.js?v=1.3.1';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.3.0';
+const TALENTS = 'data/talents.json?v=1.3.1';
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const ALL = 'ALL';
+// A hostile or corrupt feed must not be able to hang the browser. Real months
+// carry ~100 performances; this bound is far above any real value.
+const MAX_RECORDS = 5000;
 const PLACEHOLDER = ['他', 'ほか'];
 
 /** True when the theatre truncated this show's lineup with 「他」. */
@@ -337,16 +340,20 @@ function wireBody() {
 }
 
 /* ---------- boot -------------------------------------------------------- */
+function fail() {
+  const app = document.getElementById('app');
+  clear(app);
+  app.append(el('p', 'status', 'スケジュールを取得できませんでした。'));
+  app.append(el('p', 'status', '時間をおいて再読み込みしてください。'));
+}
+
 async function main() {
   const app = document.getElementById('app');
   let feed;
   try {
     feed = await (await fetch(FEED)).json();
   } catch (e) {
-    clear(app);
-    app.append(el('p', 'status', 'スケジュールを取得できませんでした。'));
-    app.append(el('p', 'status', '時間をおいて再読み込みしてください。'));
-    return;
+    return fail();
   }
   // The talent map is an optimisation, never a requirement: without it every
   // performer simply gets a search link instead of a direct profile link.
@@ -356,12 +363,23 @@ async function main() {
     state.combiOf = (t && typeof t.combi_of === 'object' && t.combi_of) ? t.combi_of : {};
   } catch { state.ids = {}; state.combiOf = {}; }
 
+  // Validate the shape before touching it. A security review found that valid
+  // JSON of the wrong shape (an object, a null record, a numeric date) threw
+  // OUTSIDE the fetch handler, so the page hung on 読み込み中 instead of showing
+  // the error written for exactly this case.
+  if (!Array.isArray(feed)) return fail();
+
   const now = new Date();
   const cur = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+  let seen = 0;
   for (const r of feed) {
-    const m = (r.date || '').slice(0, 7);
-    if (!m || m < cur) continue;         // current and future months only
+    if (seen >= MAX_RECORDS) break;
+    if (!r || typeof r !== 'object') continue;
+    if (typeof r.date !== 'string' || !/^\d{4}\/\d{2}\/\d{2}$/.test(r.date)) continue;
+    const m = r.date.slice(0, 7);
+    if (m < cur) continue;               // current and future months only
     (state.byMonth[m] = state.byMonth[m] || []).push(r);
+    seen++;
   }
   state.months = Object.keys(state.byMonth).sort();
   if (!state.months.length) {
@@ -371,4 +389,4 @@ async function main() {
   }
   render();
 }
-main();
+main().catch(fail);

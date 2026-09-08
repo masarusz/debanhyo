@@ -5,10 +5,10 @@
 // honest date for the schedule is when THIS page fetched it. Presenting a fetch
 // time as the theatre's update time would be a confident falsehood - the exact
 // thing the 「他」 section of this page exists to warn about.
-import { parseMembers } from './members.js?v=1.3.0';
+import { parseMembers } from './members.js?v=1.3.1';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.3.0';
+const TALENTS = 'data/talents.json?v=1.3.1';
 const PLACEHOLDER = ['他', 'ほか'];
 
 function hasHidden(member) {

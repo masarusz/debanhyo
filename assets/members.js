@@ -12,6 +12,12 @@
 // 292 future performances: 「他」 appears on 115 of them (39%), 「メンバー」 on 13.
 // This list is enumerated from observed data and WILL rot; an unknown
 // placeholder simply shows up as a performer with a search-only profile link.
+// A hostile or corrupt feed could put tens of thousands of separators in one
+// member field. Real bills carry about 15 names; these caps are far above any
+// real value and exist only to bound the work.
+export const MAX_MEMBER_TOKENS = 100;
+export const MAX_MEMBER_CHARS = 4000;
+
 export const NOT_A_PERSON = ['他', 'ほか', 'メンバー', '未定'];
 
 /**
@@ -26,7 +32,9 @@ export const NOT_A_PERSON = ['他', 'ほか', 'メンバー', '未定'];
 export function parseMembers(raw) {
   if (!raw) return [];
   return String(raw)
+    .slice(0, MAX_MEMBER_CHARS)
     .split(/[／/]/)
+    .slice(0, MAX_MEMBER_TOKENS)
     .map((t) => {
       t = t.split(/[\r\n]/)[0];              // drop a glued-on show title
       t = t.replace(/^\s*ゲスト[：:]\s*/, ''); // drop a guest marker
@@ -73,9 +81,38 @@ export function displayName(name, combiOf) {
   return (typeof c === 'string' && c.length) ? c : name;
 }
 
-/** A ticket URL from the feed is third-party data. Only https is ever linked. */
-export function safeTicketUrl(url) {
-  return typeof url === 'string' && /^https:\/\//.test(url) ? url : null;
+/**
+ * Hosts a ticket link may point at. Measured against the live feed 2026-09-08:
+ * url1 uses ticket.fany.lol (294) and yoshimoto.funity.jp (1); the theatre's
+ * other ticketing host appears in the unrendered url2/url3 fields.
+ *
+ * A new legitimate host would make its links disappear and show
+ * 「チケットリンクなし」 instead. That is the safe direction: a missing link is
+ * visibly incomplete, whereas a link to an attacker's page is not.
+ */
+export const TICKET_HOSTS = [
+  'ticket.fany.lol',
+  'yoshimoto.funity.jp',
+  'online-ticket.yoshimoto.co.jp',
+];
+
+/**
+ * A ticket URL from the feed is third-party data.
+ *
+ * A prefix test on 'https://' is NOT sufficient, which a security review
+ * caught: `https://ticket.fany.lol@evil.example/phish` passes it, because
+ * everything before the @ is URL *userinfo* and the real host is evil.example.
+ * So this parses the URL properly, rejects credentials, and requires an
+ * allowlisted host. Returns the normalised href, never the raw string.
+ */
+export function safeTicketUrl(url, hosts = TICKET_HOSTS) {
+  if (typeof url !== 'string') return null;
+  let u;
+  try { u = new URL(url); } catch { return null; }
+  if (u.protocol !== 'https:') return null;
+  if (u.username || u.password) return null;
+  if (!hosts.includes(u.hostname.toLowerCase())) return null;
+  return u.href;
 }
 
 /** Talent ids are bare digits. Anything else falls back to the search page. */
