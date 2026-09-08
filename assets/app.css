@@ -16,7 +16,15 @@ body{margin:0;background:var(--bg);color:var(--ink);
 /* One fixed region, measured. web.md's rule is written as a count of pinned
    elements; the thing that actually matters is how much of a phone screen it
    eats, so this is deliberately kept near 20% and re-measured on change. */
-#top{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--bg);
+/* sticky, NOT fixed. On iOS the software keyboard shrinks the visual viewport
+   while position:fixed keeps measuring the layout viewport, so Safari's
+   scroll-into-view orphans a fixed header the moment the search field is
+   tapped - it detaches and leaves a gap. A sticky header participates in normal
+   flow, so it cannot be separated from the document, and it still stays pinned
+   while scrolling, which is the intended behaviour.
+   It also means main needs no JS-computed padding: the header occupies its own
+   space, so the old layout() hack (and its inline style attribute) is gone. */
+#top{position:sticky;top:0;z-index:50;background:var(--bg);
   border-bottom:1px solid var(--line)}
 #top .bar{height:44px;background:var(--bar);color:#fff;display:flex;
   align-items:center;gap:10px;padding:0 14px}
@@ -61,7 +69,7 @@ a.prof{display:inline-block;font-size:12px;color:var(--accent);text-decoration:n
   border:1px solid var(--accent);border-radius:999px;padding:4px 12px;
   white-space:nowrap;margin:4px 0 2px}
 
-main{max-width:760px;margin:0 auto;padding:0 14px 40px}
+main{max-width:760px;margin:0 auto;padding:12px 14px 40px}
 
 ul.people{list-style:none;margin:0;padding:0;display:grid;
   grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
@@ -102,7 +110,7 @@ ul.people .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   vertical-align:middle;white-space:nowrap}
 
 /* About page */
-main.doc{padding-top:70px;max-width:640px;line-height:1.9}
+main.doc{max-width:640px;line-height:1.9}
 main.doc h2{font-size:20px;margin:8px 0 14px}
 main.doc h3{font-size:15px;margin:26px 0 6px;padding-bottom:4px;
   border-bottom:1px solid var(--line)}

@@ -5,10 +5,10 @@
 // control, and show titles and performer names are free text in it.
 import {
   parseMembers, formatYen, displayName, safeTicketUrl, profileUrl,
-} from './members.js?v=1.2.1';
+} from './members.js?v=1.2.2';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.2.1';
+const TALENTS = 'data/talents.json?v=1.2.2';
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const ALL = 'ALL';
 const PLACEHOLDER = ['他', 'ほか'];
@@ -276,12 +276,8 @@ function renderBody() {
 }
 
 /* ---------- wiring ------------------------------------------------------ */
-function layout() {
-  document.querySelector('main').style.paddingTop =
-    `${document.getElementById('top').getBoundingClientRect().height + 12}px`;
-}
 function render() {
-  renderTop(); renderBody(); wireTop(); wireBody(); layout();
+  renderTop(); renderBody(); wireTop(); wireBody();
 }
 
 /**
@@ -295,7 +291,7 @@ function render() {
  * combining, so typing ば produced 「はは^_^^_^」 on iOS.
  */
 function renderList() {
-  renderBody(); wireBody(); layout();
+  renderBody(); wireBody();
 }
 
 function wireTop() {
@@ -339,7 +335,6 @@ function wireBody() {
     state.showHidden = !state.showHidden; render();
   });
 }
-window.addEventListener('resize', layout);
 
 /* ---------- boot -------------------------------------------------------- */
 async function main() {
