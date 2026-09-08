@@ -9,7 +9,9 @@
 // Every rule here was derived from the live feed, not from documentation.
 
 // The feed uses these as lineup placeholders, not as performers. Measured on
-// 292 future performances: 「他」 appears on 115 of them (39%), 「メンバー」 on 13.
+// 292 future performances: 「他」 appears on 106 of them (36%), 「メンバー」 on 13.
+// (115 counts 他 OCCURRENCES, not performances - 9 bills carry it twice, once
+// for the main lineup and once for a 【吉本新喜劇】 sub-bill.)
 // This list is enumerated from observed data and WILL rot; an unknown
 // placeholder simply shows up as a performer with a search-only profile link.
 // A hostile or corrupt feed could put tens of thousands of separators in one
