@@ -1,92 +1,140 @@
 # 出番表 (debanhyo)
 
-ルミネtheよしもとの公演スケジュールを **芸人ごと** に見るための静的サイト。
-劇場の公式サイトは日付順のカレンダーなので、「この芸人は今月いつ出るのか」を
-調べるには向いていない。出番表はそれを逆から引く。
+A static site that shows the ルミネtheよしもと performance schedule **by
+performer** instead of by date.
 
-- 月（または全期間）を選ぶと、その期間に出演する芸人の一覧が出る
-- 芸人を選ぶと、その芸人の公演がすべて日付順に並ぶ
-- 各公演からチケット購入ページへ直接飛べる
-- 芸人ごとに吉本興業の公式プロフィールへのリンクが付く
+The theatre's own site publishes a date-first calendar, which answers "what is
+on tonight?" but not "when is this comedian on this month?". 出番表 reads the
+same public feed and inverts it.
 
-公開先: https://masarusz.github.io/debanhyo/
+**https://masarusz.github.io/debanhyo/**
+
+The interface is Japanese only — it is a Japanese comedy theatre.
+
+## Features
+
+- Pick a month, or 全期間, and see every performer appearing in that period.
+- Sort by number of appearances (出演回数順) or by name (五十音順), or search.
+- Pick a performer to see all of their performances in date order, with times,
+  prices (前売 / 当日 / オンライン) and the co-performers on each bill.
+- One tap from any performance to its FANY ticket page.
+- A link to the performer's official 吉本興業 profile.
+- Shows whose published line-up ends in 「他」 are marked, and a performer's page
+  says how many such performances exist in the period — because their absence
+  from the list is not proof they are not appearing.
+
+## Usage
+
+Open the site. Nothing is stored, nothing is logged, there is no account.
 
 ## Technical notes
 
-- 静的サイトのみ。ビルドステップなし、依存パッケージなし、フレームワークなし。
-- データ元は劇場サイトが使っているものと同じ公開フィード
-  `feed-api.yoshimoto.co.jp/fany/theater/v1`（CORS 許可済み）。
-- `public/assets/members.js` がパース規則の**唯一の実装**。ブラウザと
-  `scripts/build-talents.mjs` の両方が同じファイルを読む（移植コピーを作らない）。
-- CSP は `<meta>` で指定。GitHub Pages は HTTP ヘッダを設定できないため。
-  インライン `<script>` / `style=""` / `on*=` は使わない。
-- 公開されるのは `public/` のみ。`scripts/`・`SPEC.md`・`CLAUDE.md` は
-  `gh-pages` ブランチに載せない（`scripts/deploy.sh` の許可リスト方式）。
+- Static only: no build step, no dependencies, no framework, no server.
+- Data comes from the same public feed the theatre's own site uses,
+  `feed-api.yoshimoto.co.jp/fany/theater/v1`, which sends
+  `Access-Control-Allow-Origin: *`, so the browser reads it directly.
+  Only the current month onwards is available; past performances are not
+  returned by the feed.
+- `public/assets/members.js` is the **single implementation** of the feed's
+  parsing rules. The browser imports it and `scripts/build-talents.mjs` imports
+  the same file under Node, so the two cannot drift apart.
+- Every string that comes from the feed reaches the page through `textContent`.
+  There is no `innerHTML` in the application.
+- Ticket links are rendered only when the URL is `https:`. Talent ids must be
+  bare digits, checked when generated and again when a link is built.
+- The Content-Security-Policy lives in a `<meta>` tag because GitHub Pages
+  cannot set HTTP headers. It allows no inline script or style, so there are no
+  `<script>` blocks, no `style=""` attributes and no `on*=` handlers anywhere.
+- Form controls are at least 16px. Below that, iOS Safari zooms the whole page
+  when a field is focused; `scripts/run-tests.mjs` fails the build if this is
+  ever lowered.
+- Only `public/` is published. `scripts/`, `SPEC.md` and `CLAUDE.md` are not on
+  the `gh-pages` branch, and `scripts/deploy.sh` proves it by requesting them
+  over HTTP and asserting 404.
+
+### The talent id map
+
+`public/data/talents.json` maps a performer name to their official profile id.
+It has to be generated ahead of time: `profile.yoshimoto.co.jp` sends no CORS
+header, so a static page cannot look ids up in the browser.
+
+```bash
+node scripts/build-talents.mjs          # incremental — only new names
+node scripts/build-talents.mjs --full   # re-resolve everything
+```
+
+It runs locally and the result is committed; there is no scheduled job. The
+generator resolves a name only on an exact match, so an unknown performer falls
+back to a search link rather than risking a link to the wrong person. It also
+probes a known-good name first and writes nothing if that fails, so a change to
+the source site's markup cannot quietly empty the map.
+
+Compound entries such as 「アインシュタイン 河井ゆずる」 are shown under the コンビ.
+That fold is driven by the same generator, which asks the official talent
+database whether the leading name is itself a real act — whitespace alone is not
+a safe test, because 「NON STYLE」 and 「kento fukaya」 are single names that
+contain a space.
 
 ## Development
 
 ```bash
-node scripts/run-tests.mjs        # ゴールデンテスト
-python3 -m http.server 4181 --directory public
+node scripts/run-tests.mjs                        # golden tests + CSS guards
+python3 -m http.server 4181 --directory public    # or use .claude/launch.json
+./scripts/deploy.sh --dry-run                     # show what would ship
+./scripts/deploy.sh                               # publish and verify
 ```
 
-## 変更履歴 / Changelog
+The test suite asserts against cases transcribed from the live feed, not
+invented ones. A green suite is evidence about the code and never about the
+product.
+
+## Change Log
 
 ### v1.2.3 — 2026-09-08
-- **iPhoneで検索欄をタップすると画面が崩れる問題を修正（本当の原因）。**
-  検索欄の `font-size` が 15px だったため、iOS Safari が
-  **フォーム要素にフォーカスするとページ全体を自動的に拡大**していた。
-  ヘッダがずれて見えたのは拡大の結果であり、`position` の問題ではなかった。
-  16px に変更。ピンチ操作を禁止せずに回避する方法はこれだけ。
-- `scripts/run-tests.mjs` に CSS を検査するガードを追加。
-  input / select / textarea の `font-size` が 16px 未満なら**テストが落ちる**。
-  今後追加されるフォーム要素にも自動的に適用される。
+- **Fixed the real cause of the layout breaking when the search field was
+  tapped on iPhone.** The input was 15px, and iOS Safari zooms the entire page
+  when a form control below 16px receives focus. The earlier diagnosis
+  (`position: fixed` versus the software keyboard) was wrong.
+- `scripts/run-tests.mjs` now parses the stylesheet and fails if any
+  `input`, `select` or `textarea` sets `font-size` below 16px, so this cannot
+  regress — including for controls not yet written.
 
 ### v1.2.2 — 2026-09-08
-- **iPhoneで検索欄をタップするとヘッダが崩れる問題を修正。**
-  ヘッダが `position: fixed` だったため、ソフトキーボードが開くと
-  iOS Safari がヘッダを本来の位置から切り離してしまっていた
-  （キーボードは visual viewport を縮めるが fixed は layout viewport を見るため）。
-  `position: sticky` に変更。スクロール中に固定される挙動は変わらない。
-- 併せて、ヘッダの高さを JS で測って main に padding を当てる処理を削除。
-  sticky はレイアウトの流れの中に入るため不要。インラインstyle属性がゼロになった。
+- Header changed from `position: fixed` to `position: sticky`. This did not fix
+  the reported bug, but it is still correct: it removed the JavaScript that
+  measured the header and rewrote `main`'s padding on every render and resize,
+  and with it the last inline style attribute in the app.
 
 ### v1.2.1 — 2026-09-08
-- **日本語入力(IME)の不具合を修正。** 検索欄に「ば」と入力すると
-  「はは^_^^_^」のような文字列になっていた。入力のたびにヘッダごと
-  作り直していたため、フリック入力の濁点（合成中）が中断されていた。
-  検索中はヘッダを再描画せず、`compositionstart` / `compositionend` を
-  尊重するようにした。iPhone のフリック入力で確認済み。
-- `scripts/deploy.sh` の検証を固定待ち時間からポーリングに変更。
-  GitHub Pages のビルドが間に合わず、成功したデプロイを失敗と報告していた。
+- **Fixed Japanese IME input in the search box.** Typing ば produced
+  「はは^_^^_^」. は → ば is a composition, and the handler was rebuilding the
+  whole header — including the input element — on every keystroke, which
+  aborted the composition. Searching now re-renders only the results, and the
+  handler waits for `compositionend` instead of acting on provisional text.
+- `scripts/deploy.sh` verification now polls instead of sleeping a fixed 25s,
+  which had reported a successful deploy as a failure.
 
 ### v1.2.0 — 2026-09-08
-- 芸人ページに「出演者が『他』表記の公演がN件あります」の注意書きを追加。
-  「確認する」でその公演一覧（日付・公演名・チケットリンク）を開ける。
-  N はその芸人が出演者として名前が挙がっていない公演のみを数える。
-- 「このアプリについて」に月別の内訳を追加。「他」表記は月によって大きく異なり
-  （実測 2026年9月 2% / 10月 49% / 11月 61%）、劇場が出演者を発表するのが
-  公演直前のため、直近の月ほど確定している。
+- A performer's page now says how many performances in the period have a line-up
+  ending in 「他」 **and do not name that performer**, with a disclosure listing
+  them. A performer named in all of a month's truncated shows sees no notice.
+- The About page reports the proportion per month rather than one blended
+  figure, because the difference is the part worth acting on: measured
+  2026-09 2%, 2026-10 49%, 2026-11 61%. The theatre announces full casts late,
+  so the nearest month is nearly complete and later months are not.
 
 ### v1.1.0 — 2026-09-08
-- コンビ名と個人名が併記された出演者（「3時のヒロイン ゆめっち」等）を
-  **コンビの行にまとめて**表示。空白での分割ではなく、公式プロフィールサイトに
-  そのコンビが実在するか確認できたものだけを統合する（「NON STYLE」や
-  「kento fukaya」を誤って分割しないため）。芸人一覧は 213組 → 197組。
-- 出演者が「他」で終わる公演に「ほか出演者あり」バッジを表示。
-- 「このアプリについて」ページを追加。出演者一覧が完全でないことを明記し、
-  該当公演の割合はフィードから毎回計算する。
-- talents.json の生成は手元で実行して push する運用（GitHub Actions は使わない）。
+- Performers billed as コンビ plus an individual are shown under the コンビ.
+  Performer list 213 → 197.
+- Performances whose line-up ends in 「他」 are marked 「ほか出演者あり」.
+- Added the About page.
 
 ### v1.0.0 — 2026-09-08
-- 初回リリース。芸人一覧（出演回数順／五十音順）、検索、月・全期間の切り替え、
-  芸人ごとの公演一覧、チケット購入リンク、公式プロフィールリンク。
-- 固定ヘッダに月・検索・芸人名・出演数を表示（375x812 で 23% / 22%、実測）。
-- フィード由来の文字列はすべて `textContent` 経由。`innerHTML` は使わない。
-- チケット URL は https のみリンクする。talent id は数字のみ許可。
+- First release. Performer list, search, month and 全期間 views, per-performer
+  schedules, ticket links and official profile links.
 
 ### v0.1.0 — 2026-09-08
-- Phase 2 scaffold. 決定論レイヤ（`members.js`）とゴールデンフィクスチャ24件、
-  厳格な CSP 下で動く静的シェル。
-- **Gate A: PASSED**（the owner, 2026-09-08）。試作を6ラウンド使い、
-  出演者起点のビューに実際の判断があることを確認。
+- Scaffold: the deterministic layer, its golden fixture, and a static shell
+  serving under a strict CSP.
+- **Gate A: PASSED** (2026-09-08) after six rounds on a throwaway prototype,
+  confirming there were real decisions in the performer-first view.
