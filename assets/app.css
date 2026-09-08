@@ -44,8 +44,14 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .months .sm{opacity:.75;font-size:12px;margin-left:5px;font-weight:600}
 
 .controls{display:flex;gap:8px;align-items:center;margin-top:8px}
+/* font-size MUST be >= 16px. iOS Safari zooms the whole page in when a form
+   field with a smaller font is focused, and that zoom - not any positioning
+   bug - is what crops the header and shifts the layout sideways when the
+   search box is tapped. There is no way to opt out that does not also disable
+   pinch-zoom for everyone, so the font size is the fix.
+   scripts/run-tests.mjs enforces this; do not lower it. */
 .controls input{flex:1 1 auto;min-width:0;padding:8px 12px;border:1px solid var(--line);
-  border-radius:8px;font-size:15px;font-family:inherit;background:var(--panel);
+  border-radius:8px;font-size:16px;font-family:inherit;background:var(--panel);
   color:var(--ink)}
 .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;
   background:var(--panel);flex:0 0 auto}
