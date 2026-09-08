@@ -4,18 +4,28 @@
 // textContent, never innerHTML. The feed is third-party data we do not
 // control, and show titles and performer names are free text in it.
 import {
-  parseMembers, formatYen, safeTicketUrl, profileUrl,
-} from './members.js?v=1.0.0';
+  parseMembers, formatYen, displayName, safeTicketUrl, profileUrl,
+} from './members.js?v=1.1.0';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.0.0';
+const TALENTS = 'data/talents.json?v=1.1.0';
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const ALL = 'ALL';
+const PLACEHOLDER = ['他', 'ほか'];
+
+/** True when the theatre truncated this show's lineup with 「他」. */
+function lineupTruncated(member) {
+  return (member || '').split(/[／/]/)
+    .some((t) => PLACEHOLDER.includes(t.split(/[\r\n]/)[0].trim()));
+}
 
 const state = {
   month: ALL, sort: 'count', q: '', person: null,
-  months: [], byMonth: {}, ids: {},
+  months: [], byMonth: {}, ids: {}, combiOf: {},
 };
+
+/** Every performer name in the UI passes through here exactly once. */
+const shown = (raw) => displayName(raw, state.combiOf);
 
 /* ---------- tiny DOM helpers (no innerHTML anywhere in this file) -------- */
 function el(tag, cls, text) {
@@ -44,7 +54,9 @@ function recordsFor(month) {
 function peopleOf(month) {
   const map = new Map();
   for (const r of recordsFor(month)) {
-    for (const name of parseMembers(r.member)) {
+    // A show can bill both 「アインシュタイン」 and 「アインシュタイン 河井ゆずる」;
+    // after folding they are one name, and the show must count once.
+    for (const name of new Set(parseMembers(r.member).map(shown))) {
       if (!map.has(name)) map.set(name, []);
       map.get(name).push(r);
     }
@@ -121,7 +133,9 @@ function showCard(r, exclude) {
   const card = el('div', 'show');
   const times = [r.dateTime2, r.dateTime3].filter(Boolean).join('〜');
   card.append(el('div', 'd', `${r.date}（${weekday(r.date)}）${times}`));
-  card.append(el('div', 't', r.name || ''));
+  const title = el('div', 't', r.name || '');
+  if (lineupTruncated(r.member)) title.append(el('span', 'hokabadge', 'ほか出演者あり'));
+  card.append(title);
 
   // Labels follow the theatre's own renderer: price1=前売, price2=当日,
   // price3=オンライン on its own row.
@@ -153,7 +167,7 @@ function showCard(r, exclude) {
     card.append(el('span', 'nobuy', 'チケットリンクなし'));
   }
 
-  const others = parseMembers(r.member).filter((n) => n !== exclude);
+  const others = [...new Set(parseMembers(r.member).map(shown))].filter((n) => n !== exclude);
   if (others.length) card.append(el('div', 'with', `共演： ${others.join('、')}`));
   return card;
 }
@@ -269,7 +283,8 @@ async function main() {
   try {
     const t = await (await fetch(TALENTS)).json();
     state.ids = (t && typeof t.ids === 'object') ? t.ids : {};
-  } catch { state.ids = {}; }
+    state.combiOf = (t && typeof t.combi_of === 'object' && t.combi_of) ? t.combi_of : {};
+  } catch { state.ids = {}; state.combiOf = {}; }
 
   const now = new Date();
   const cur = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
