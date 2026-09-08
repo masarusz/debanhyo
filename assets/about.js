@@ -5,10 +5,10 @@
 // honest date for the schedule is when THIS page fetched it. Presenting a fetch
 // time as the theatre's update time would be a confident falsehood - the exact
 // thing the 「他」 section of this page exists to warn about.
-import { parseMembers } from './members.js?v=1.3.2';
+import { parseMembers } from './members.js?v=1.3.3';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.3.2';
+const TALENTS = 'data/talents.json?v=1.3.3';
 const PLACEHOLDER = ['他', 'ほか'];
 
 // The version is derived from this module's own ?v= query, which is bumped on
@@ -29,6 +29,18 @@ const jpDateTime = (d) => `${jpDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes(
 function jpFromISO(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
   return m ? `${Number(m[1])}年${Number(m[2])}月${Number(m[3])}日` : '不明';
+}
+
+// Deliberately no claim about HOW the map is refreshed. It used to say
+// 「手動生成」, which quietly became false the day the refresh was automated -
+// the same drift as the hard-coded version string. The date is the ground
+// truth, and if it stops moving the page says so on its own.
+const STALE_DAYS = 21;
+function daysSince(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return null;
+  const then = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Math.floor((Date.now() - then.getTime()) / 86400000);
 }
 
 async function schedule() {
@@ -82,6 +94,14 @@ async function talents() {
   const linked = Object.keys(t.ids || {}).length;
   const missing = (t.unresolved || []).length;
   set('talentsCoverage', `${linked}組（未収録 ${missing}組）`);
+
+  const age = daysSince(t.generated);
+  const stale = document.getElementById('talentsStale');
+  if (stale) {
+    stale.textContent = (age !== null && age > STALE_DAYS)
+      ? `　※ ${age}日前から更新されていません` : '';
+    stale.className = (age !== null && age > STALE_DAYS) ? 'stale' : '';
+  }
 }
 
 version();
