@@ -5,11 +5,17 @@
 // honest date for the schedule is when THIS page fetched it. Presenting a fetch
 // time as the theatre's update time would be a confident falsehood - the exact
 // thing the 「他」 section of this page exists to warn about.
-import { parseMembers } from './members.js?v=1.3.1';
+import { parseMembers } from './members.js?v=1.3.2';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.3.1';
+const TALENTS = 'data/talents.json?v=1.3.2';
 const PLACEHOLDER = ['他', 'ほか'];
+
+// The version is derived from this module's own ?v= query, which is bumped on
+// every release. It used to be typed into about.html in two places and one of
+// them went stale - the page whose whole job is stating what is current was
+// reporting a version that was not. Deriving it makes drift impossible.
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '';
 
 function hasHidden(member) {
   return (member || '').split(/[／/]/)
@@ -62,6 +68,12 @@ async function schedule() {
   void parseMembers; // same module the app parses with; kept explicit
 }
 
+function version() {
+  if (!VERSION) return;
+  set('appVer', `v${VERSION}`);
+  set('appVerFoot', `出番表 v${VERSION}`);
+}
+
 async function talents() {
   const t = await (await fetch(TALENTS)).json();
   const when = jpFromISO(t.generated);
@@ -71,6 +83,8 @@ async function talents() {
   const missing = (t.unresolved || []).length;
   set('talentsCoverage', `${linked}組（未収録 ${missing}組）`);
 }
+
+version();
 
 // Independent: a failure in one must not blank the other.
 schedule().catch(() => {
