@@ -5,10 +5,10 @@
 // control, and show titles and performer names are free text in it.
 import {
   parseMembers, formatYen, displayName, safeTicketUrl, profileUrl,
-} from './members.js?v=1.1.0';
+} from './members.js?v=1.2.0';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.1.0';
+const TALENTS = 'data/talents.json?v=1.2.0';
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const ALL = 'ALL';
 const PLACEHOLDER = ['他', 'ほか'];
@@ -21,7 +21,7 @@ function lineupTruncated(member) {
 
 const state = {
   month: ALL, sort: 'count', q: '', person: null,
-  months: [], byMonth: {}, ids: {}, combiOf: {},
+  months: [], byMonth: {}, ids: {}, combiOf: {}, showHidden: false,
 };
 
 /** Every performer name in the UI passes through here exactly once. */
@@ -181,6 +181,48 @@ function renderBody() {
     const shows = (peopleOf(state.month).get(state.person) || [])
       .slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
+    // Shows in scope whose lineup is truncated AND where this performer is not
+    // named. These are the ones the page cannot honestly call an absence: the
+    // performer may be inside the 「他」. Measured 2026-09-08: truncation tracks
+    // how far ahead a show is (Sept 2%, Oct 49%, Nov 61%), because the theatre
+    // announces full casts late - so this is usually tiny for the current month
+    // and large for 全期間.
+    const maybe = recordsFor(state.month)
+      .filter((r) => lineupTruncated(r.member)
+        && ![...new Set(parseMembers(r.member).map(shown))].includes(state.person))
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+    if (maybe.length) {
+      const box = el('div', 'caveat');
+      const p = el('p', null,
+        `この期間には出演者が「他」表記の公演が${maybe.length}件あります。`
+        + 'この一覧に出ていない出演が含まれている可能性があります。');
+      const btn = el('button', 'caveat-toggle',
+        state.showHidden ? '閉じる' : `確認する（${maybe.length}件）`);
+      btn.dataset.toggleHidden = '1';
+      box.append(p, btn);
+      if (state.showHidden) {
+        const list = el('div', 'caveat-list');
+        let lastM = null;
+        for (const r of maybe) {
+          const mk = r.date.slice(0, 7);
+          if (mk !== lastM) { list.append(el('div', 'caveat-month', monthLabel(mk))); lastM = mk; }
+          const row = el('div', 'caveat-row');
+          row.append(el('span', 'cd', `${r.date.slice(5)}（${weekday(r.date)}）`));
+          row.append(el('span', 'ct', r.name || ''));
+          const url = safeTicketUrl(r.url1);
+          if (url) {
+            const a = el('a', 'cl', 'チケット ↗');
+            a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+            row.append(a);
+          }
+          list.append(row);
+        }
+        box.append(list);
+      }
+      app.append(box);
+    }
+
     const prof = profileUrl(state.person, state.ids);
     const a = el('a', 'prof', prof.direct ? '公式プロフィール ↗' : '公式サイトで検索 ↗');
     a.href = prof.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
@@ -253,6 +295,10 @@ function wire() {
   top.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
     state.sort = b.dataset.sort; render();
   }));
+  const toggle = document.getElementById('app').querySelector('[data-toggle-hidden]');
+  if (toggle) toggle.addEventListener('click', () => {
+    state.showHidden = !state.showHidden; render();
+  });
   const back = top.querySelector('[data-back]');
   if (back) back.addEventListener('click', () => {
     state.person = null; window.scrollTo(0, 0); render();
@@ -261,7 +307,8 @@ function wire() {
   if (q) q.addEventListener('input', () => { state.q = q.value; render(true); });
   document.getElementById('app').querySelectorAll('[data-p]').forEach((b) =>
     b.addEventListener('click', () => {
-      state.person = b.dataset.p; window.scrollTo(0, 0); render();
+      state.person = b.dataset.p; state.showHidden = false;
+      window.scrollTo(0, 0); render();
     }));
 }
 window.addEventListener('resize', layout);
