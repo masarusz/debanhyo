@@ -87,8 +87,19 @@ echo "   pushed $BRANCH"
 # Not a sample and not a hard-coded list: the manifest is built from the same
 # file set the upload used, so a new asset cannot be missed. A list someone has
 # to remember to extend verifies last month's interests.
-echo "== waiting for Pages to publish"
-sleep 25
+# GitHub Pages builds asynchronously, and a fixed sleep is a race: a v1.2.0
+# deploy that had actually landed was reported as 5 files differing because the
+# build had not finished. Poll until the first file matches, then verify all.
+echo "== waiting for Pages to publish (up to 180s)"
+FIRST="${FILES[0]}"
+want=$(shasum -a 256 "public/$FIRST" | cut -d' ' -f1)
+ready=0
+for i in $(seq 1 36); do
+  got=$(curl -sS -H 'Cache-Control: no-cache' "$SITE/$FIRST" 2>/dev/null | shasum -a 256 | cut -d' ' -f1) || true
+  if [[ "$got" == "$want" ]]; then ready=1; echo "   published after ~$((i*5))s"; break; fi
+  sleep 5
+done
+[[ $ready -eq 1 ]] || echo "   WARNING: $FIRST still stale after 180s; verifying anyway"
 echo "== verifying ${#FILES[@]} files against $SITE"
 DIFFS=0; CHECKED=0
 for f in "${FILES[@]}"; do

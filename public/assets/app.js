@@ -5,10 +5,10 @@
 // control, and show titles and performer names are free text in it.
 import {
   parseMembers, formatYen, displayName, safeTicketUrl, profileUrl,
-} from './members.js?v=1.2.0';
+} from './members.js?v=1.2.1';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.2.0';
+const TALENTS = 'data/talents.json?v=1.2.1';
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const ALL = 'ALL';
 const PLACEHOLDER = ['他', 'ほか'];
@@ -280,14 +280,25 @@ function layout() {
   document.querySelector('main').style.paddingTop =
     `${document.getElementById('top').getBoundingClientRect().height + 12}px`;
 }
-function render(keepFocus) {
-  renderTop(); renderBody(); wire(); layout();
-  if (keepFocus) {
-    const q = document.getElementById('q');
-    if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
-  }
+function render() {
+  renderTop(); renderBody(); wireTop(); wireBody(); layout();
 }
-function wire() {
+
+/**
+ * Re-render ONLY the results. The header - and with it the search input - is
+ * left completely untouched.
+ *
+ * This is not an optimisation. Rebuilding the input on every keystroke aborts
+ * an in-flight IME composition, and on a Japanese flick keyboard は -> ば IS a
+ * composition: は followed by the 「゛」 key. With the element destroyed
+ * mid-composition the dakuten key emitted its literal characters instead of
+ * combining, so typing ば produced 「はは^_^^_^」 on iOS.
+ */
+function renderList() {
+  renderBody(); wireBody(); layout();
+}
+
+function wireTop() {
   const top = document.getElementById('topinner');
   top.querySelectorAll('[data-m]').forEach((b) => b.addEventListener('click', () => {
     state.month = b.dataset.m; state.person = null; render();
@@ -295,21 +306,38 @@ function wire() {
   top.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
     state.sort = b.dataset.sort; render();
   }));
-  const toggle = document.getElementById('app').querySelector('[data-toggle-hidden]');
-  if (toggle) toggle.addEventListener('click', () => {
-    state.showHidden = !state.showHidden; render();
-  });
   const back = top.querySelector('[data-back]');
   if (back) back.addEventListener('click', () => {
     state.person = null; window.scrollTo(0, 0); render();
   });
   const q = top.querySelector('#q');
-  if (q) q.addEventListener('input', () => { state.q = q.value; render(true); });
-  document.getElementById('app').querySelectorAll('[data-p]').forEach((b) =>
+  if (q) {
+    let composing = false;
+    q.addEventListener('compositionstart', () => { composing = true; });
+    q.addEventListener('compositionend', () => {
+      composing = false; state.q = q.value; renderList();
+    });
+    q.addEventListener('input', (e) => {
+      // While the IME is composing, the field holds provisional text (は, then
+      // はﾞ). Filtering on it is wrong and re-rendering is harmful, so wait for
+      // compositionend, which fires once the character is settled.
+      if (composing || e.isComposing) return;
+      state.q = q.value; renderList();
+    });
+  }
+}
+
+function wireBody() {
+  const app = document.getElementById('app');
+  app.querySelectorAll('[data-p]').forEach((b) =>
     b.addEventListener('click', () => {
       state.person = b.dataset.p; state.showHidden = false;
       window.scrollTo(0, 0); render();
     }));
+  const toggle = app.querySelector('[data-toggle-hidden]');
+  if (toggle) toggle.addEventListener('click', () => {
+    state.showHidden = !state.showHidden; render();
+  });
 }
 window.addEventListener('resize', layout);
 
