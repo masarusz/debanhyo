@@ -96,7 +96,7 @@ function renderTop() {
       el('span', 'sub', `${scopeLabel(state.month)} ／ 全${mine.length}公演`));
 
     top.append(bar);
-    // The profile link is NOT pinned. the requirement was for the name and the
+    // The profile link is NOT pinned. The requirement was for the name and the
     // 月/出演数 line to stay on screen; adding a fourth item wrapped .pbar onto
     // three lines and pushed the fixed region to 26% of a 375x812 phone, past
     // the ~25% budget. It lives at the top of the schedule instead.

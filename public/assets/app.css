@@ -21,7 +21,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
    scroll-into-view orphans a fixed header the moment the search field is
    tapped - it detaches and leaves a gap. A sticky header participates in normal
    flow, so it cannot be separated from the document, and it still stays pinned
-   while scrolling, which is what the owner asks for on every project.
+   while scrolling, which is the intended behaviour.
    It also means main needs no JS-computed padding: the header occupies its own
    space, so the old layout() hack (and its inline style attribute) is gone. */
 #top{position:sticky;top:0;z-index:50;background:var(--bg);

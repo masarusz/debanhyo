@@ -55,7 +55,7 @@ export function formatYen(raw) {
 
 /**
  * A compound token like 「アインシュタイン 河井ゆずる」 or 「MC：ガクテンソク 奥田修二」
- * names an individual inside a コンビ. the owner's decision (2026-09-08): these
+ * names an individual inside a コンビ. Product decision (2026-09-08): these
  * link to the コンビ's profile, so this returns the コンビ name.
  * Returns the input unchanged when there is nothing to strip.
  */
@@ -66,7 +66,7 @@ export function combiName(name) {
 }
 
 /**
- * the owner's decision (2026-09-08): 「3時のヒロイン ゆめっち」 is shown under
+ * Product decision (2026-09-08): 「3時のヒロイン ゆめっち」 is shown under
  * 「3時のヒロイン」, so one コンビ occupies one row.
  *
  * The fold is driven by `combi_of` in talents.json, NOT by whitespace.

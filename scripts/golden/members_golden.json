@@ -219,7 +219,7 @@
   ],
   "displayName": [
     {
-      "why": "the owner's case - the individual is shown under the コンビ",
+      "why": "the individual is shown under the コンビ",
       "in": "3時のヒロイン ゆめっち",
       "combiOf": {
         "3時のヒロイン ゆめっち": "3時のヒロイン"
@@ -319,7 +319,7 @@
   ],
   "profileUrl": [
     {
-      "why": "the owner's own example",
+      "why": "a real name from the live data",
       "in": "ちょんまげラーメン",
       "ids": {
         "ちょんまげラーメン": "5204"

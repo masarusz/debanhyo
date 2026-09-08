@@ -195,7 +195,9 @@ the one that built the app).
 ## Scheduled refresh
 
 `public/data/talents.json` has to be regenerated as new performers are added to
-the schedule. Run `node scripts/build-talents.mjs` and commit the result.
+the schedule. Run `node scripts/build-talents.mjs` and commit the result; see
+"The talent id map" above.
 
 Automating that is deliberately left out of this repository. Any scheduler is
-specific to one machine, and none of that belongs in a public repo.
+specific to one machine — absolute paths, a user account, a node install — and
+none of that belongs in a public repo.

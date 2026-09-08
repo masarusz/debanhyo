@@ -52,7 +52,7 @@ async function resolve(name) {
   if (combi && combi !== name) {
     await sleep(400);
     const h2 = (await search(combi)).find(([, n]) => norm(n) === norm(combi));
-    // the owner's decision 2026-09-08: a compound token links to the コンビ.
+    // Product decision 2026-09-08: a compound token links to the コンビ.
     if (h2) return { id: h2[0], via: combi };
   }
   return null;

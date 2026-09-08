@@ -7,6 +7,7 @@
 // that asserts nothing is the failure mode this rule exists to prevent.
 
 import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
@@ -98,6 +99,48 @@ for (const page of ['index.html', 'about.html']) {
     console.log(`  FAIL version: ${page} hard-codes ${stray.join(', ')} - derive it instead`);
   } else {
     pass++; console.log(`  ok   version: ${page} has no hand-typed version string`);
+  }
+}
+
+// --- local-information guard ----------------------------------------------
+// NOTHING about the machine this was built on may reach a public repository:
+// no absolute home path, no username, no local directory layout, no toolchain
+// install path. This is checked over every TRACKED file, because a file that
+// is merely gitignored today is one `git add -f` away from being published.
+{
+  const tracked = execSync('git ls-files', { cwd: join(here, '..'), encoding: 'utf8' })
+    .split('\n').filter(Boolean);
+  // Patterns are assembled from fragments so this file does not match itself.
+  // The alternative - excluding the guard from its own scan - would create the
+  // one blind spot an attacker or a careless edit would land in.
+  const P = (parts, flags) => new RegExp(parts.join(''), flags);
+  const patterns = [
+    [P(['/Us', 'ers/[A-Za-z]']),                 'absolute macOS home path'],
+    [P(['/ho', 'me/[A-Za-z]']),                  'absolute Linux home path'],
+    [P(['\\$H', 'OME']),                          'home-directory variable'],
+    [P(['~/(Doc', 'uments|Lib', 'rary|Desk', 'top|Down', 'loads)']), 'local directory layout'],
+    [P(['\\.n', 'vm/versions']),                  'node version-manager install path'],
+    [P(['/var/fol', 'ders/']),                   'macOS temp path'],
+    [P(['Launch', 'Agents']),                    'launchd agent path'],
+    [P(['/Volu', 'mes/']),                       'mounted volume path'],
+  ];
+  let flagged = 0;
+  for (const f of tracked) {
+    if (/\.(png|jpg|gif|ico|woff2?)$/.test(f)) continue;
+    const body = readFileSync(join(here, '..', f), 'utf8');
+    body.split('\n').forEach((lineText, i) => {
+      for (const [re, what] of patterns) {
+        if (re.test(lineText)) {
+          fail++; flagged++;
+          console.log(`  FAIL local-info: ${f}:${i + 1} contains ${what}`);
+          console.log(`         ${lineText.trim().slice(0, 90)}`);
+        }
+      }
+    });
+  }
+  if (flagged === 0) {
+    pass++;
+    console.log(`  ok   local-info: ${tracked.length} tracked files carry no local path or machine detail`);
   }
 }
 
