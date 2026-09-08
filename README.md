@@ -176,3 +176,11 @@ the one that built the app).
   serving under a strict CSP.
 - **Gate A: PASSED** (2026-09-08) after six rounds on a throwaway prototype,
   confirming there were real decisions in the performer-first view.
+
+## Scheduled refresh
+
+`public/data/talents.json` has to be regenerated as new performers are added to
+the schedule. Run `node scripts/build-talents.mjs` and commit the result.
+
+Automating that is deliberately left out of this repository. Any scheduler is
+specific to one machine, and none of that belongs in a public repo.
