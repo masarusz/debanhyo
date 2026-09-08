@@ -51,7 +51,7 @@ for (const [group, run] of Object.entries(runners)) {
 
 // The golden file must actually carry work. Guards against a truncated fixture
 // still exiting 0 - the deployment-shaped version of the same rule.
-const MIN_CASES = 25;
+const MIN_CASES = 35;
 if (total < MIN_CASES) {
   console.log(`  FAIL harness: only ${total} cases, expected at least ${MIN_CASES}`);
   fail++;

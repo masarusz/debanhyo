@@ -67,7 +67,14 @@ else
 fi
 # Remove everything tracked, then lay down exactly the allowlist. Anything that
 # used to be published and is no longer allowlisted disappears.
-( cd "$WORKTREE" && git rm -rq . 2>/dev/null || true )
+#
+# The error from `git rm` is NOT suppressed. A security review pointed out that
+# swallowing it lets a partial cleanup leave an unexpected file on gh-pages
+# while every later check still passes, because those checks only look for
+# files they already know about.
+if [[ -n "$( cd "$WORKTREE" && git ls-files )" ]]; then
+  ( cd "$WORKTREE" && git rm -rq . ) || fail "could not clear the $BRANCH worktree"
+fi
 for f in "${FILES[@]}"; do
   mkdir -p "$WORKTREE/$(dirname "$f")"
   cp "public/$f" "$WORKTREE/$f"
@@ -76,11 +83,22 @@ done
 # directories beginning with an underscore.
 touch "$WORKTREE/.nojekyll"
 
+# The published tree must be EXACTLY the allowlist plus .nojekyll. Verifying
+# only the files we expect cannot see a file we do not expect - which is the
+# same "a list someone has to remember to extend" failure the checksum step
+# below was already written to avoid, in the opposite direction.
 ( cd "$WORKTREE"
   git add -A
+  EXPECTED=$(printf '%s\n' "${FILES[@]}" .nojekyll | sort)
+  ACTUAL=$(git ls-files | sort)
+  if [[ "$EXPECTED" != "$ACTUAL" ]]; then
+    echo "   published tree does not match the allowlist:" >&2
+    diff <(echo "$EXPECTED") <(echo "$ACTUAL") | sed 's/^/     /' >&2
+    exit 90
+  fi
   if git diff --cached --quiet; then echo "   no changes to publish"
   else git commit -q -m "Publish $(date -u +%Y-%m-%dT%H:%M:%SZ)"; fi
-  git push -q origin "$BRANCH" )
+  git push -q origin "$BRANCH" ) || fail "staging or pushing $BRANCH failed (extra files on the branch?)"
 echo "   pushed $BRANCH"
 
 # --- 4. Verify EVERY deployed file against the live host --------------------

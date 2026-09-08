@@ -90,6 +90,24 @@ product.
 
 ## Change Log
 
+### v1.3.1 — 2026-09-08
+Three findings from an independent security review (a separate Codex job from
+the one that built the app).
+
+- **Ticket links are now parsed, not prefix-matched.** A `https://` prefix test
+  accepted `https://ticket.fany.lol@evil.example/phish`, where everything
+  before the `@` is URL *userinfo* and the real host is `evil.example` — a
+  fixed 「チケットを購入」 button pointing at an attacker's page. Links are now
+  parsed with `new URL()`, must be `https:`, must carry no credentials, and
+  must be on an allowlisted ticket host.
+- **The feed's shape is validated before use.** Valid JSON of the wrong shape
+  threw outside the fetch handler, so the page hung on 読み込み中 instead of
+  showing the error written for that case. Records are also capped at 5000 and
+  member fields at 100 tokens, so a hostile feed cannot exhaust the browser.
+- **The deploy script no longer suppresses cleanup errors**, and now asserts the
+  published tree is *exactly* the allowlist plus `.nojekyll` — checking only for
+  files we expect cannot see a file we do not.
+
 ### v1.3.0 — 2026-09-08
 - The About page now states **when the data it reports was obtained**. The
   schedule feed carries no publisher-side timestamp, so the page says when *this
