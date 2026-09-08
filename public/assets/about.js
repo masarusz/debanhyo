@@ -1,6 +1,6 @@
 // Fills the one figure on the About page from live data, so the stated
 // limitation cannot drift away from what the feed actually contains.
-import { parseMembers } from './members.js?v=1.2.1';
+import { parseMembers } from './members.js?v=1.2.2';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
 const PLACEHOLDER = ['他', 'ほか'];

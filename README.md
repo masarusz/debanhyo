@@ -32,6 +32,15 @@ python3 -m http.server 4181 --directory public
 
 ## 変更履歴 / Changelog
 
+### v1.2.2 — 2026-09-08
+- **iPhoneで検索欄をタップするとヘッダが崩れる問題を修正。**
+  ヘッダが `position: fixed` だったため、ソフトキーボードが開くと
+  iOS Safari がヘッダを本来の位置から切り離してしまっていた
+  （キーボードは visual viewport を縮めるが fixed は layout viewport を見るため）。
+  `position: sticky` に変更。スクロール中に固定される挙動は変わらない。
+- 併せて、ヘッダの高さを JS で測って main に padding を当てる処理を削除。
+  sticky はレイアウトの流れの中に入るため不要。インラインstyle属性がゼロになった。
+
 ### v1.2.1 — 2026-09-08
 - **日本語入力(IME)の不具合を修正。** 検索欄に「ば」と入力すると
   「はは^_^^_^」のような文字列になっていた。入力のたびにヘッダごと
