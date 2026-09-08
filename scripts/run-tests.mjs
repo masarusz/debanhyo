@@ -60,24 +60,39 @@ if (total < MIN_CASES) {
 
 // --- iOS zoom guard -------------------------------------------------------
 // Not a golden case: a stylesheet invariant. iOS Safari zooms the page when a
-// form control with font-size < 16px is focused, which cropped the header and
-// shifted the layout when the search box was tapped. Checking the CSS excludes
-// the bug for every form control at once, including ones not written yet.
+// form control with a computed font-size < 16px is focused.
+//
+// v1 of this check split the stylesheet on '}' and matched only `px`. An
+// independent review mutation-tested it and found two shapes it could not see:
+//   - a violation nested inside @media, because the media block's closing brace
+//     terminated the chunk. That is THE place a small form control gets written.
+//   - a violation expressed in rem (0.9rem = 14.4px), invisible to a px-only
+//     regex, and silently non-vacuous as soon as one compliant px control exists.
+//
+// WHAT THIS CHECK DOES NOT COVER, stated beside it: font-size set from
+// JavaScript, from a CSS custom property, by a shorthand `font:` declaration,
+// or inherited from an ancestor rather than declared on the control itself.
 {
-  const css = readFileSync(join(here, '../public/assets/app.css'), 'utf8');
-  const rules = css.split('}');
+  const css = readFileSync(join(here, '../public/assets/app.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')        // comments first: v1 read one as a selector
+    .replace(/@[a-zA-Z-]+[^{]*\{/g, ' ');      // unwrap at-rules so nested rules are seen
+  const TO_PX = { px: 1, rem: 16, em: 16, pt: 96 / 72, '%': 0.16 };
   let checked = 0;
-  for (const rule of rules) {
-    const [selector, body] = rule.split('{');
-    if (!body || !/\b(input|select|textarea)\b/.test(selector)) continue;
-    const m = body.match(/font-size\s*:\s*([\d.]+)px/);
+  for (const rule of css.split('}')) {
+    const cut = rule.indexOf('{');
+    if (cut < 0) continue;
+    const selector = rule.slice(0, cut);
+    const body = rule.slice(cut + 1);
+    if (!/\b(input|select|textarea)\b/.test(selector)) continue;
+    const m = body.match(/font-size\s*:\s*([\d.]+)(px|rem|em|pt|%)/);
     if (!m) continue;
     checked++;
-    const px = parseFloat(m[1]);
+    const px = parseFloat(m[1]) * TO_PX[m[2]];
+    const shown = `${m[1]}${m[2]}${m[2] === 'px' ? '' : ` (${px.toFixed(1)}px)`}`;
     if (px >= 16) {
-      pass++; console.log(`  ok   ios-zoom: ${selector.trim()} font-size ${px}px >= 16px`);
+      pass++; console.log(`  ok   ios-zoom: ${selector.trim()} font-size ${shown} >= 16px`);
     } else {
-      fail++; console.log(`  FAIL ios-zoom: ${selector.trim()} font-size ${px}px < 16px`);
+      fail++; console.log(`  FAIL ios-zoom: ${selector.trim()} font-size ${shown} < 16px`);
       console.log('         iOS Safari will zoom the page when this field is focused');
     }
   }
