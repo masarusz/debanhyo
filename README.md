@@ -113,8 +113,8 @@ product.
   version string is hand-typed into the markup again.
 
 ### v1.3.1 — 2026-09-08
-Three findings from an independent security review (a separate Codex job from
-the one that built the app).
+Three findings from an independent security review, each reproduced locally
+before being fixed.
 
 - **Ticket links are now parsed, not prefix-matched.** A `https://` prefix test
   accepted `https://ticket.fany.lol@evil.example/phish`, where everything
@@ -189,8 +189,7 @@ the one that built the app).
 ### v0.1.0 — 2026-09-08
 - Scaffold: the deterministic layer, its golden fixture, and a static shell
   serving under a strict CSP.
-- **Gate A: PASSED** (2026-09-08) after six rounds on a throwaway prototype,
-  confirming there were real decisions in the performer-first view.
+- Validated against a throwaway prototype before any of this was built.
 
 ## Scheduled refresh
 
