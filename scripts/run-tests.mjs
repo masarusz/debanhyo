@@ -50,13 +50,20 @@ for (const [group, run] of Object.entries(runners)) {
   for (const c of cases) { check(group, c.why, run(c), c.out); total++; }
 }
 
-// The golden file must actually carry work. Guards against a truncated fixture
-// still exiting 0 - the deployment-shaped version of the same rule.
+// Two floors, and each one NAMES THE NUMBER IT WATCHES - because the first
+// version of this did not, and that was the defect.
+//
+// MIN_CASES watches `total`, the GOLDEN CASE count. It cannot see a non-golden
+// guard being deleted, because those increment `pass` and never `total`. A
+// version-drift guard was spliced out of this file during an unrelated repair
+// and the suite went green with two fewer assertions; raising this floor would
+// not have caught it, since it would still have been counting golden cases.
 const MIN_CASES = 35;
 if (total < MIN_CASES) {
-  console.log(`  FAIL harness: only ${total} cases, expected at least ${MIN_CASES}`);
+  console.log(`  FAIL harness: only ${total} golden cases, expected at least ${MIN_CASES}`);
   fail++;
 }
+
 
 // --- iOS zoom guard -------------------------------------------------------
 // Not a golden case: a stylesheet invariant. iOS Safari zooms the page when a
@@ -157,6 +164,18 @@ for (const page of ['index.html', 'about.html']) {
     pass++;
     console.log(`  ok   local-info: ${tracked.length} tracked files carry no local path or machine detail`);
   }
+}
+
+// MIN_ASSERTIONS watches every assertion the run executed, golden or not.
+// Deleting a check is the one change a suite can never fail on, and it is a
+// normal by-product of repairing another one. Raise this deliberately when you
+// add checks; if it drops, something left.
+const MIN_ASSERTIONS = 42;
+const ran = pass + fail;
+if (ran < MIN_ASSERTIONS) {
+  console.log(`  FAIL harness: only ${ran} assertions ran, expected at least ${MIN_ASSERTIONS}`);
+  console.log('         a check has probably been deleted - compare against the last green run');
+  fail++;
 }
 
 console.log(`\n${pass} passed, ${fail} failed, ${total} golden cases`);
