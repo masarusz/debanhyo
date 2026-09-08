@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://feed-api.yoshimoto.co.jp; base-uri 'none'; form-action 'none'">
+<title>このアプリについて — 出番表</title>
+<link rel="stylesheet" href="assets/app.css?v=1.1.0">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/apple-touch-icon.png">
+</head>
+<body>
+<div id="top">
+  <div class="bar">
+    <h1>出番表</h1><span class="tag">ルミネtheよしもと</span>
+    <a class="navlink" href="./">一覧へ戻る</a>
+  </div>
+</div>
+<main class="doc">
+  <h2>このアプリについて</h2>
+  <p>
+    ルミネtheよしもとの公演スケジュールを<strong>芸人ごと</strong>に見るための
+    非公式の個人サイトです。劇場の公式サイトは日付順のカレンダーなので、
+    「この芸人は今月いつ出るのか」を調べるには向いていません。
+    出番表はそれを逆から引きます。
+  </p>
+
+  <h3>使い方</h3>
+  <ul>
+    <li>上の「全期間」または月を選ぶと、その期間に出演する芸人の一覧が出ます。</li>
+    <li>「出演回数順」でその期間によく出ている芸人が、「五十音順」で名前から探せます。</li>
+    <li>芸人を選ぶと、その芸人の公演が日付順に並びます。</li>
+    <li>「チケットを購入」でFANYチケットの各公演ページへ移動します。</li>
+  </ul>
+
+  <h3 class="warn">出演者一覧は完全ではありません</h3>
+  <p>
+    これがこのアプリのいちばん重要な制限です。
+    劇場が公開している出演者情報は、末尾が「他」で終わっていることがあります。
+    このとき、<strong>名前が公表されていない出演者がいます</strong>。
+  </p>
+  <p>
+    現在のデータでは <strong id="hokaStat">一部</strong> の公演がこの形式です。
+    つまり、ある芸人のページに出ていない日でも、その芸人が
+    「他」に含まれて出演している可能性があります。
+    <strong>「出ていない」ことの証明にはなりません。</strong>
+    公表されていない情報なので、このアプリの側では補いようがありません
+    （チケットサイトにも同じ「他」の表記のまま掲載されています）。
+    出演者が「他」を含む公演には <span class="hokabadge">ほか出演者あり</span>
+    と表示しています。
+  </p>
+  <p>
+    また、劇場の案内にあるとおり<strong>出演者は変更になる場合があります</strong>。
+    お出かけの前に必ず公式サイトとチケットページをご確認ください。
+  </p>
+
+  <h3>公式プロフィールのリンクについて</h3>
+  <p>
+    芸人ページの「公式プロフィール」は吉本興業の公式プロフィールサイトへのリンクです。
+    名前とプロフィールIDの対応表は手元で生成して更新しているため、
+    新しく出演が決まった芸人はしばらく直リンクにならず、
+    「公式サイトで検索」に切り替わります。誤って別人のページに飛ばないよう、
+    <strong>名前が完全に一致したときだけ</strong>直リンクにしています。
+  </p>
+  <p>
+    「アインシュタイン 河井ゆずる」のようにコンビ名と個人名が併記されている場合は、
+    <strong>コンビのページにまとめて</strong>表示しています。
+  </p>
+
+  <h3>データについて</h3>
+  <ul>
+    <li>公演データは劇場サイトが使用している公開フィードをそのまま読み込んでいます。</li>
+    <li>表示できるのは<strong>今月以降</strong>の公演のみです。過去の公演は取得できません。</li>
+    <li>料金の表記（前売／当日／オンライン）は公式サイトと同じ区分です。</li>
+    <li>データはページを開くたびに取得されるため、常に最新です。</li>
+  </ul>
+
+  <h3>免責</h3>
+  <p>
+    吉本興業株式会社およびルミネtheよしもととは関係のない、個人が作成したサイトです。
+    内容の正確性は保証できません。最終的な情報は必ず
+    <a href="https://lumine.yoshimoto.co.jp/schedule/" target="_blank" rel="noopener noreferrer">公式サイト ↗</a>
+    でご確認ください。
+  </p>
+
+  <p class="ver">出番表 v1.1.0</p>
+</main>
+<script type="module" src="assets/about.js?v=1.1.0"></script>
+</body>
+</html>

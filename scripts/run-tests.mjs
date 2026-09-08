@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
-  parseMembers, formatYen, combiName, safeTicketUrl, profileUrl,
+  parseMembers, formatYen, combiName, displayName, safeTicketUrl, profileUrl,
 } from '../public/assets/members.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -33,6 +33,7 @@ const runners = {
   parseMembers:  (c) => parseMembers(c.in),
   formatYen:     (c) => formatYen(c.in),
   combiName:     (c) => combiName(c.in),
+  displayName:   (c) => displayName(c.in, c.combiOf),
   safeTicketUrl: (c) => safeTicketUrl(c.in),
   profileUrl:    (c) => profileUrl(c.in, c.ids),
 };
@@ -50,7 +51,7 @@ for (const [group, run] of Object.entries(runners)) {
 
 // The golden file must actually carry work. Guards against a truncated fixture
 // still exiting 0 - the deployment-shaped version of the same rule.
-const MIN_CASES = 20;
+const MIN_CASES = 25;
 if (total < MIN_CASES) {
   console.log(`  FAIL harness: only ${total} cases, expected at least ${MIN_CASES}`);
   fail++;

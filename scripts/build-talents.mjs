@@ -89,6 +89,24 @@ async function main() {
     await sleep(500);
   }
 
+  // Which tokens are 「コンビ名 個人名」 and should collapse onto the コンビ's row?
+  // Whitespace alone is NOT a safe test: 「NON STYLE」 and 「kento fukaya」 are
+  // single billed names containing a space, and splitting them invents rows for
+  // performers nobody is billed as. So ask the official talent database whether
+  // the head is itself a real talent, and fold only when it says yes.
+  const combiOf = { ...(prev.combi_of || {}) };
+  const compound = names.filter((n) => /[ 　（(]/.test(n) && !(n in combiOf));
+  if (compound.length) console.log(`checking ${compound.length} compound names for a コンビ head`);
+  for (const n of compound) {
+    const head = combiName(n);
+    if (!head || head === n) { combiOf[n] = null; continue; }
+    try {
+      const hit = (await search(head)).find(([, nm]) => norm(nm) === norm(head));
+      combiOf[n] = hit ? head : null;
+    } catch (e) { combiOf[n] = null; }
+    await sleep(500);
+  }
+
   const kept = names.filter((n) => n in ids);
   // Never let a bad run gut a good map.
   const before = Object.keys(prev.ids || {}).length;
@@ -103,6 +121,9 @@ async function main() {
     ids: finalIds,
     via_combi: Object.fromEntries(Object.entries(via).filter(([k]) => k in finalIds)),
     unresolved: names.filter((n) => !(n in finalIds)),
+    // token -> コンビ name it should be displayed under (null = stands alone)
+    combi_of: Object.fromEntries(Object.entries(combiOf)
+      .filter(([k, v]) => v && names.includes(k))),
   }, null, 1) + '\n');
   console.log(`\nwrote ${OUT}`);
   console.log(`${kept.length}/${names.length} linked (${Math.round(kept.length / names.length * 100)}%), ${names.length - kept.length} fall back to search`);

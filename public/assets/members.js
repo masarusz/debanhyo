@@ -57,6 +57,22 @@ export function combiName(name) {
   return core.split(/[ 　]+/)[0] || String(name || '');
 }
 
+/**
+ * the owner's decision (2026-09-08): 「3時のヒロイン ゆめっち」 is shown under
+ * 「3時のヒロイン」, so one コンビ occupies one row.
+ *
+ * The fold is driven by `combi_of` in talents.json, NOT by whitespace.
+ * Measured: 「NON STYLE」 and 「kento fukaya」 are single billed names that
+ * contain a space, and splitting on it invents rows for performers nobody is
+ * billed as. The generator only records a fold after the official talent
+ * database confirms the head is itself a real talent — which is also why
+ * 「令和ロマン 松井ケムリ」 stands alone: that database has no 令和ロマン entry.
+ */
+export function displayName(name, combiOf) {
+  const c = combiOf ? combiOf[name] : null;
+  return (typeof c === 'string' && c.length) ? c : name;
+}
+
 /** A ticket URL from the feed is third-party data. Only https is ever linked. */
 export function safeTicketUrl(url) {
   return typeof url === 'string' && /^https:\/\//.test(url) ? url : null;

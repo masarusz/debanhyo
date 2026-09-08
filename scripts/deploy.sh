@@ -35,6 +35,8 @@ fi
 # first request, which is the safe direction.
 FILES=(
   "index.html"
+  "about.html"
+  "assets/about.js"
   "assets/app.css"
   "assets/app.js"
   "assets/members.js"

@@ -47,6 +47,13 @@
     { "why": "plain コンビ name is unchanged", "in": "ちょんまげラーメン", "out": "ちょんまげラーメン" },
     { "why": "a nakaguro is part of the name, not a separator", "in": "矢野・兵動", "out": "矢野・兵動" }
   ],
+  "displayName": [
+    { "why": "the owner's case - the individual is shown under the コンビ", "in": "3時のヒロイン ゆめっち", "combiOf": { "3時のヒロイン ゆめっち": "3時のヒロイン" }, "out": "3時のヒロイン" },
+    { "why": "NON STYLE contains a space but is one billed name - must NOT split", "in": "NON STYLE", "combiOf": {}, "out": "NON STYLE" },
+    { "why": "no map at all (talents.json missing) leaves every name untouched", "in": "アインシュタイン 河井ゆずる", "combiOf": null, "out": "アインシュタイン 河井ゆずる" },
+    { "why": "an explicit null means the official DB found no コンビ head", "in": "令和ロマン 松井ケムリ", "combiOf": { "令和ロマン 松井ケムリ": null }, "out": "令和ロマン 松井ケムリ" },
+    { "why": "a non-string in the map is ignored rather than rendered", "in": "X", "combiOf": { "X": 5 }, "out": "X" }
+  ],
   "safeTicketUrl": [
     { "why": "all 392 links in the live feed are https", "in": "https://ticket.fany.lol/event/detail/1/2", "out": "https://ticket.fany.lol/event/detail/1/2" },
     { "why": "script URL must never reach an href", "in": "javascript:alert(1)", "out": null },
