@@ -90,6 +90,13 @@ product.
 
 ## Change Log
 
+### v1.3.2 — 2026-09-08
+- **Fixed a stale version on the About page.** The version was hand-typed in two
+  places in `about.html` and the v1.3.1 release updated only one, so the page
+  whose job is stating what is current reported v1.3.0. It is now derived from
+  the module's own `?v=` cache-buster, and `scripts/run-tests.mjs` fails if any
+  version string is hand-typed into the markup again.
+
 ### v1.3.1 — 2026-09-08
 Three findings from an independent security review (a separate Codex job from
 the one that built the app).

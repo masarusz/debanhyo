@@ -86,5 +86,20 @@ if (total < MIN_CASES) {
   }
 }
 
+// --- version-drift guard --------------------------------------------------
+// The version must appear in the HTML only as an asset cache-buster (?v=X).
+// A hand-typed "v1.3.0" in the body went stale across a release and shipped a
+// wrong version on the page that exists to say what is current.
+for (const page of ['index.html', 'about.html']) {
+  const html = readFileSync(join(here, '../public/' + page), 'utf8');
+  const stray = html.replace(/\?v=[\d.]+/g, '').match(/v\d+\.\d+\.\d+/g);
+  if (stray) {
+    fail++;
+    console.log(`  FAIL version: ${page} hard-codes ${stray.join(', ')} - derive it instead`);
+  } else {
+    pass++; console.log(`  ok   version: ${page} has no hand-typed version string`);
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed, ${total} golden cases`);
 process.exit(fail === 0 ? 0 : 1);
