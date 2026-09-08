@@ -5,10 +5,10 @@
 // control, and show titles and performer names are free text in it.
 import {
   parseMembers, formatYen, displayName, safeTicketUrl, profileUrl,
-} from './members.js?v=1.3.3';
+} from './members.js?v=1.3.4';
 
 const FEED = 'https://feed-api.yoshimoto.co.jp/fany/theater/v1?theater=lumine&venue=01';
-const TALENTS = 'data/talents.json?v=1.3.3';
+const TALENTS = 'data/talents.json?v=1.3.4';
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const ALL = 'ALL';
 // A hostile or corrupt feed must not be able to hang the browser. Real months
@@ -339,6 +339,26 @@ function wireBody() {
   });
 }
 
+/* ---------- home ---------------------------------------------------------
+   The title links to "./" so it works without JS, but on this page going home
+   is just a state reset - reloading would re-fetch the entire feed to show a
+   list already in memory. */
+function wireHome() {
+  const a = document.querySelector('#top .bar a.home');
+  if (!a) return;
+  a.addEventListener('click', (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // let the browser do its thing
+    e.preventDefault();
+    state.person = null;
+    state.month = ALL;
+    state.q = '';
+    state.sort = 'count';
+    state.showHidden = false;
+    window.scrollTo(0, 0);
+    render();
+  });
+}
+
 /* ---------- boot -------------------------------------------------------- */
 function fail() {
   const app = document.getElementById('app');
@@ -381,6 +401,7 @@ async function main() {
     (state.byMonth[m] = state.byMonth[m] || []).push(r);
     seen++;
   }
+  wireHome();
   state.months = Object.keys(state.byMonth).sort();
   if (!state.months.length) {
     clear(app);

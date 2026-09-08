@@ -29,6 +29,12 @@ body{margin:0;background:var(--bg);color:var(--ink);
 #top .bar{height:44px;background:var(--bar);color:#fff;display:flex;
   align-items:center;gap:10px;padding:0 14px}
 #top .bar h1{font-size:15px;margin:0;letter-spacing:.08em;font-weight:600}
+/* The title is a link home. It stays visually identical to the plain heading
+   it replaced - a title that suddenly looks like a link reads as clutter -
+   but it is a real <a href="./">, so it works with JS disabled and offers the
+   usual long-press / open-in-new-tab behaviour. */
+#top .bar h1 a.home{color:inherit;text-decoration:none;display:inline-block}
+#top .bar h1 a.home:hover{opacity:.75}
 #top .bar .tag{font-size:11px;color:#b9b1a6}
 #top .bar .navlink{margin-left:auto;font-size:12px;color:#e8e2da;text-decoration:none;
   border:1px solid #4a453f;border-radius:999px;padding:3px 10px;white-space:nowrap}
