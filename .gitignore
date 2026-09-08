@@ -1,0 +1,10 @@
+# macOS Finder metadata - never wanted in a repo, and the framework starter
+# leaked these downstream once already.
+.DS_Store
+
+# Scratch and local-only working files.
+*.local
+/tmp/
+
+# The published branch is built by scripts/deploy.sh, never committed to main.
+/.publish/

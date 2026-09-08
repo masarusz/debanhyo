@@ -1,0 +1,64 @@
+{
+  "_comment": "Golden fixture for the deterministic layer. Every case is copied from the LIVE feed on 2026-09-08, not invented. A fixture whose expectations its own author computed cannot prove the specification was right - these are transcriptions of real records, which is the closest this domain gets to an external oracle.",
+  "parseMembers": [
+    {
+      "why": "plain slash-separated lineup",
+      "in": "村上ショージ／麒麟／ギャロップ",
+      "out": ["村上ショージ", "麒麟", "ギャロップ"]
+    },
+    {
+      "why": "a show title glued on with CRLF - the token before it is the performer",
+      "in": "ガベジ\r\n『時代劇コメディtheよしもと剣喜劇』： 内海仁志／ぼよんぼよん",
+      "out": ["ガベジ", "ぼよんぼよん"]
+    },
+    {
+      "why": "guest prefix is dropped, the name is kept",
+      "in": "ヘンダーソン／ゲスト：囲碁将棋／オズワルド",
+      "out": ["ヘンダーソン", "囲碁将棋", "オズワルド"]
+    },
+    {
+      "why": "trailing 他 is a placeholder, not a performer - 39% of shows have it",
+      "in": "ジャルジャル／トット／他",
+      "out": ["ジャルジャル", "トット"]
+    },
+    {
+      "why": "メンバー is the theatre's own placeholder text",
+      "in": "中川家／メンバー／マルセイユ",
+      "out": ["中川家", "マルセイユ"]
+    },
+    {
+      "why": "ASCII slash also separates",
+      "in": "とろサーモン 村田/アインシュタイン 河井",
+      "out": ["とろサーモン 村田", "アインシュタイン 河井"]
+    },
+    { "why": "empty field", "in": "", "out": [] },
+    { "why": "null field - 2 of 328 records", "in": null, "out": [] }
+  ],
+  "formatYen": [
+    { "why": "the backslash IS the yen sign", "in": "\\3,300", "out": "¥3,300" },
+    { "why": "several per field with labels between", "in": "\\2,800/立見：\\2,800", "out": "¥2,800/立見：¥2,800" },
+    { "why": "student pricing", "in": "\\3,000/学生\\2,000", "out": "¥3,000/学生¥2,000" },
+    { "why": "absent price", "in": null, "out": "" }
+  ],
+  "combiName": [
+    { "why": "コンビ名 + 個人名", "in": "アインシュタイン 河井ゆずる", "out": "アインシュタイン" },
+    { "why": "MC prefix stripped first", "in": "MC：ガクテンソク 奥田修二", "out": "ガクテンソク" },
+    { "why": "parenthetical affiliation", "in": "粗品（霜降り明星）", "out": "粗品" },
+    { "why": "plain コンビ name is unchanged", "in": "ちょんまげラーメン", "out": "ちょんまげラーメン" },
+    { "why": "a nakaguro is part of the name, not a separator", "in": "矢野・兵動", "out": "矢野・兵動" }
+  ],
+  "safeTicketUrl": [
+    { "why": "all 392 links in the live feed are https", "in": "https://ticket.fany.lol/event/detail/1/2", "out": "https://ticket.fany.lol/event/detail/1/2" },
+    { "why": "script URL must never reach an href", "in": "javascript:alert(1)", "out": null },
+    { "why": "plain http is refused too", "in": "http://ticket.fany.lol/x", "out": null },
+    { "why": "33 of 328 records have no ticket link", "in": null, "out": null }
+  ],
+  "profileUrl": [
+    { "why": "the owner's own example", "in": "ちょんまげラーメン", "ids": { "ちょんまげラーメン": "5204" },
+      "out": { "url": "https://profile.yoshimoto.co.jp/talent/detail?id=5204", "direct": true } },
+    { "why": "unmapped name falls back to search, never to a guess", "in": "矢野・兵動", "ids": {},
+      "out": { "url": "https://profile.yoshimoto.co.jp/talent/list/?keywords=%E7%9F%A2%E9%87%8E%E3%83%BB%E5%85%B5%E5%8B%95", "direct": false } },
+    { "why": "a non-numeric id is refused - a poisoned map cannot produce a javascript: href", "in": "X", "ids": { "X": "javascript:alert(1)" },
+      "out": { "url": "https://profile.yoshimoto.co.jp/talent/list/?keywords=X", "direct": false } }
+  ]
+}

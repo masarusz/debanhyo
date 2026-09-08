@@ -1,0 +1,21 @@
+/* 出番表 — all styling lives here. The CSP forbids inline styles, so a
+   style="" attribute anywhere in this app is a defect, not a shortcut. */
+:root{
+  --bg:#faf8f5; --panel:#fff; --ink:#1c1a17; --sub:#6b645c;
+  --line:#e3ddd4; --accent:#a1000e; --accent-soft:#fdeff0; --bar:#1c1a17;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
+#top{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--bg);
+  border-bottom:1px solid var(--line)}
+#top .bar{height:44px;background:var(--bar);color:#fff;display:flex;
+  align-items:center;gap:10px;padding:0 14px}
+#top .bar h1{font-size:15px;margin:0;letter-spacing:.08em;font-weight:600}
+#top .bar .tag{font-size:11px;color:#b9b1a6}
+#top .inner{max-width:760px;margin:0 auto;padding:8px 14px}
+main{max-width:760px;margin:0 auto;padding:60px 14px 40px}
+.status{padding:30px 0;text-align:center;color:var(--sub)}
+.selfcheck{font-size:12px;color:var(--sub);text-align:center;line-height:2}
+.selfcheck b{color:var(--accent)}

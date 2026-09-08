@@ -1,0 +1,39 @@
+# 出番表 (debanhyo)
+
+ルミネtheよしもとの公演スケジュールを **芸人ごと** に見るための静的サイト。
+劇場の公式サイトは日付順のカレンダーなので、「この芸人は今月いつ出るのか」を
+調べるには向いていない。出番表はそれを逆から引く。
+
+- 月（または全期間）を選ぶと、その期間に出演する芸人の一覧が出る
+- 芸人を選ぶと、その芸人の公演がすべて日付順に並ぶ
+- 各公演からチケット購入ページへ直接飛べる
+- 芸人ごとに吉本興業の公式プロフィールへのリンクが付く
+
+公開先: https://masarusz.github.io/debanhyo/
+
+## Technical notes
+
+- 静的サイトのみ。ビルドステップなし、依存パッケージなし、フレームワークなし。
+- データ元は劇場サイトが使っているものと同じ公開フィード
+  `feed-api.yoshimoto.co.jp/fany/theater/v1`（CORS 許可済み）。
+- `public/assets/members.js` がパース規則の**唯一の実装**。ブラウザと
+  `scripts/build-talents.mjs` の両方が同じファイルを読む（移植コピーを作らない）。
+- CSP は `<meta>` で指定。GitHub Pages は HTTP ヘッダを設定できないため。
+  インライン `<script>` / `style=""` / `on*=` は使わない。
+- 公開されるのは `public/` のみ。`scripts/`・`SPEC.md`・`CLAUDE.md` は
+  `gh-pages` ブランチに載せない（`scripts/deploy.sh` の許可リスト方式）。
+
+## Development
+
+```bash
+node scripts/run-tests.mjs        # ゴールデンテスト
+python3 -m http.server 4181 --directory public
+```
+
+## 変更履歴 / Changelog
+
+### v0.1.0 — 2026-09-08
+- Phase 2 scaffold. 決定論レイヤ（`members.js`）とゴールデンフィクスチャ24件、
+  厳格な CSP 下で動く静的シェル。
+- **Gate A: PASSED**（the owner, 2026-09-08）。試作を6ラウンド使い、
+  出演者起点のビューに実際の判断があることを確認。
