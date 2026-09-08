@@ -112,3 +112,21 @@ main.doc ul{margin:0 0 12px;padding-left:1.2em;font-size:14px}
 main.doc li{margin-bottom:4px}
 main.doc a{color:var(--accent)}
 main.doc .ver{margin-top:28px;color:var(--sub);font-size:12px}
+
+/* The truncated-lineup caveat on a performer's page. It exists because an
+   absence from this list is not proof of absence - see .hokabadge above. */
+.caveat{background:#fdf9ef;border:1px solid #e8d9a8;border-radius:10px;
+  padding:10px 12px;margin:6px 0 12px}
+.caveat p{margin:0 0 8px;font-size:12px;color:#6b5a2a;line-height:1.7}
+.caveat-toggle{background:#fff;border:1px solid #d9c88f;color:#7a5c00;
+  border-radius:999px;padding:5px 14px;font-size:12px;cursor:pointer;
+  font-family:inherit}
+.caveat-toggle:hover{border-color:#b39a4a}
+.caveat-list{margin-top:10px;border-top:1px solid #ece0bd;padding-top:8px}
+.caveat-month{font-size:11px;color:#8a7433;font-weight:600;margin:8px 0 4px}
+.caveat-row{display:flex;gap:8px;align-items:baseline;font-size:12px;
+  padding:3px 0;line-height:1.6}
+.caveat-row .cd{flex:0 0 auto;color:#7a5c00;font-weight:600}
+.caveat-row .ct{flex:1 1 auto;color:var(--ink);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.caveat-row .cl{flex:0 0 auto;color:var(--accent);text-decoration:none}
