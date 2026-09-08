@@ -108,16 +108,24 @@ echo "   pushed $BRANCH"
 # GitHub Pages builds asynchronously, and a fixed sleep is a race: a v1.2.0
 # deploy that had actually landed was reported as 5 files differing because the
 # build had not finished. Poll until the first file matches, then verify all.
+# Poll until EVERY allowlisted file matches, not one sentinel. Watching a single
+# file is wrong whenever a deploy changes other files but not that one: the
+# sentinel matches instantly and verification then runs against a half-published
+# site. Observed - a deploy that changed only assets passed the index.html poll
+# and reported 3 files differing.
 echo "== waiting for Pages to publish (up to 180s)"
-FIRST="${FILES[0]}"
-want=$(shasum -a 256 "public/$FIRST" | cut -d' ' -f1)
 ready=0
 for i in $(seq 1 36); do
-  got=$(curl -sS -H 'Cache-Control: no-cache' "$SITE/$FIRST" 2>/dev/null | shasum -a 256 | cut -d' ' -f1) || true
-  if [[ "$got" == "$want" ]]; then ready=1; echo "   published after ~$((i*5))s"; break; fi
+  allmatch=1
+  for f in "${FILES[@]}"; do
+    want=$(shasum -a 256 "public/$f" | cut -d' ' -f1)
+    got=$(curl -sS -H 'Cache-Control: no-cache' "$SITE/$f" 2>/dev/null | shasum -a 256 | cut -d' ' -f1) || true
+    [[ "$got" == "$want" ]] || { allmatch=0; break; }
+  done
+  if [[ $allmatch -eq 1 ]]; then ready=1; echo "   published after ~$((i*5))s"; break; fi
   sleep 5
 done
-[[ $ready -eq 1 ]] || echo "   WARNING: $FIRST still stale after 180s; verifying anyway"
+[[ $ready -eq 1 ]] || echo "   WARNING: still stale after 180s; verifying anyway to report the diff"
 echo "== verifying ${#FILES[@]} files against $SITE"
 DIFFS=0; CHECKED=0
 for f in "${FILES[@]}"; do
