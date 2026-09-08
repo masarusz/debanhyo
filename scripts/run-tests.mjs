@@ -57,5 +57,34 @@ if (total < MIN_CASES) {
   fail++;
 }
 
+// --- iOS zoom guard -------------------------------------------------------
+// Not a golden case: a stylesheet invariant. iOS Safari zooms the page when a
+// form control with font-size < 16px is focused, which cropped the header and
+// shifted the layout when the search box was tapped. Checking the CSS excludes
+// the bug for every form control at once, including ones not written yet.
+{
+  const css = readFileSync(join(here, '../public/assets/app.css'), 'utf8');
+  const rules = css.split('}');
+  let checked = 0;
+  for (const rule of rules) {
+    const [selector, body] = rule.split('{');
+    if (!body || !/\b(input|select|textarea)\b/.test(selector)) continue;
+    const m = body.match(/font-size\s*:\s*([\d.]+)px/);
+    if (!m) continue;
+    checked++;
+    const px = parseFloat(m[1]);
+    if (px >= 16) {
+      pass++; console.log(`  ok   ios-zoom: ${selector.trim()} font-size ${px}px >= 16px`);
+    } else {
+      fail++; console.log(`  FAIL ios-zoom: ${selector.trim()} font-size ${px}px < 16px`);
+      console.log('         iOS Safari will zoom the page when this field is focused');
+    }
+  }
+  if (checked === 0) {
+    fail++;
+    console.log('  FAIL ios-zoom: found no form-control font-size to check - the guard is vacuous');
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed, ${total} golden cases`);
 process.exit(fail === 0 ? 0 : 1);
